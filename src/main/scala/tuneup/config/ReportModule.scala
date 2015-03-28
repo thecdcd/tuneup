@@ -40,6 +40,13 @@ class ReportModule(val config: ReportingConfiguration) extends AbstractModule {
     s"http://${config.reportHost()}:${config.reportPort()}"
   }
 
+  @Provides
+  @Singleton
+  @Named("batchsize")
+  def providesBatchSize: Int = {
+    config.reportBatchSize()
+  }
+
   /**
    * Default Akka configuration.
    *
@@ -66,11 +73,11 @@ class ReportModule(val config: ReportingConfiguration) extends AbstractModule {
     ConfigFactory.parseString(
       s"""spray.can {
          |host-connector {
-         |  max-connections = ${config.reportPoolSize()}
+          |max-connections = ${config.reportPoolSize()}
           |
-          |  pipelining = off
-          |}
-          |}""".stripMargin)
+          |pipelining = off
+        |}
+      |}""".stripMargin)
   }
 
   /**

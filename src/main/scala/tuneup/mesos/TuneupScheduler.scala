@@ -5,11 +5,11 @@ import java.util
 import akka.actor.ActorRef
 import com.google.inject.Inject
 import com.google.inject.name.Named
-import tuneup.actors.SeriesData
 import org.apache.mesos.Protos._
 import org.apache.mesos.{Scheduler, SchedulerDriver}
+import tuneup.actors.{SeriesData, SeriesList}
 
-class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef)
+class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef, @Named("batchsize") batchSize: Int)
   extends Scheduler {
   override def registered(driver: SchedulerDriver, frameworkId: FrameworkID, masterInfo: MasterInfo): Unit = {}
 
@@ -30,6 +30,8 @@ class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef)
   override def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]): Unit = {
     import scala.collection.JavaConverters._
 
+    var series = List.empty[SeriesData]
+
     for (offer <- offers.asScala) {
       // decline offer.
       driver.declineOffer(offer.getId)
@@ -38,11 +40,12 @@ class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef)
       offer.getResourcesList.asScala.foreach { resource =>
         if (resource.hasScalar) {
           val resourceName = resource.getName
-          metricsLogger ! SeriesData(s"slave.$slave.resource.$resourceName", "value", resource.getScalar.getValue: java.lang.Double)
+          series = series ::: List(SeriesData(s"slave.$slave.resource.$resourceName", "value", resource.getScalar.getValue: java.lang.Double))
         }
       }
-
     }
+
+    series.grouped(batchSize).toList.foreach(s => metricsLogger ! SeriesList(s))
   }
 
   override def executorLost(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, status: Int): Unit = {}

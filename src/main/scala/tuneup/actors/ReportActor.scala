@@ -32,10 +32,16 @@ class ReportActor(val username: String,
   import spray.httpx.SprayJsonSupport._
 
   override def receive: Receive = {
-    case SeriesData(s, c, v) => {
-      val series = Series(s, List(c), List(List(v)))
+    case x: SeriesData => {
+      val series = seriesDataToSeries(x)
       pipeline {
         Post(s"$url/db/$database/series?time_precision=s", List(series))
+      }
+    }
+    case SeriesList(x) => {
+      val seriesList = x.map(sd => seriesDataToSeries(sd))
+      pipeline {
+        Post(s"$url/db/$database/series?time_precision=s", seriesList)
       }
     }
     case x => {
@@ -44,7 +50,12 @@ class ReportActor(val username: String,
     }
   }
 
+  def seriesDataToSeries(sd: SeriesData): Series = {
+    Series(sd.series, List(sd.column), List(List(sd.value)))
+  }
+
 }
 
+case class SeriesList(list: List[SeriesData])
 case class SeriesData(series: String, column: String, value: Double)
 case class Series(name: String, columns: List[String], points: List[List[Double]])

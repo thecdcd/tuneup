@@ -38,4 +38,10 @@ trait ReportingConfiguration extends ScallopConf {
     required = true,
     noshort = true)
 
+  lazy val reportBatchSize = opt[Int]("report_batch_size",
+    descr = "The number of series to send at one time.",
+    default = Some(10),
+    required = true,
+    noshort = true)
+
 }
