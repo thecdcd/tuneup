@@ -7,7 +7,7 @@ only [InfluxDB](https://www.influxdb.com) is supported.
 
 ## Overview
 
-Tune Up listens to resource offers and logs scalar values to a time series backend. [spray-client](https://www.spray.io) 
+Tune Up listens to resource offers and logs scalar values to a time series backend. [Dispatch](http://dispatch.databinder.net/Dispatch.html)
 is used to interact with InfluxDB's REST API.
 
 Data will be saved under the configured database with series names matching: `slave.<mesos assigned UUID>.resource.<cpu|mem|disk>`.
@@ -59,11 +59,6 @@ The examples provided were run on OS X with Mesos using `--registry=in_memory`.
 ## Configuration Notes
 
 - `report_db` is "database name" in InfluxDB terms.
-
-## Issues
-
-- Periodically, spray-client will complain about early connection termination problems. Running a proxy, such as nginx,
-between Tune Up and InfluxDB reduces these problems.
 
 ## Todo
 
