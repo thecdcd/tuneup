@@ -7,7 +7,7 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import org.apache.mesos.Protos._
 import org.apache.mesos.{Scheduler, SchedulerDriver}
-import tuneup.actors.{SeriesData, SeriesList}
+import tuneup.services.TuneupSeries.{SeriesList, SeriesData}
 
 class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef, @Named("batchsize") batchSize: Int)
   extends Scheduler {
@@ -40,7 +40,7 @@ class TuneupScheduler @Inject()(@Named("router") metricsLogger: ActorRef, @Named
       offer.getResourcesList.asScala.foreach { resource =>
         if (resource.hasScalar) {
           val resourceName = resource.getName
-          series = series ::: List(SeriesData(s"slave.$slave.resource.$resourceName", "value", resource.getScalar.getValue: java.lang.Double))
+          series = series ::: List(SeriesData(slave, resourceName, resource.getScalar.getValue))
         }
       }
     }

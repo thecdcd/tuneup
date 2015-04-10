@@ -4,18 +4,11 @@ import akka.actor.{ActorSystem, Props}
 import akka.routing.RoundRobinPool
 import com.google.inject.name.Named
 import com.google.inject.{AbstractModule, Inject, Provides, Singleton}
-import tuneup.actors.ReportActor
+import tuneup.actors.{GraphiteActor, InfluxActor}
 
 class ReportModule(val config: ReportingConfiguration) extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[ReportingConfiguration]).toInstance(config)
-  }
-
-  @Provides
-  @Singleton
-  @Named("url")
-  def providesUrl = {
-    s"http://${config.reportHost()}:${config.reportPort()}"
   }
 
   @Provides
@@ -36,10 +29,14 @@ class ReportModule(val config: ReportingConfiguration) extends AbstractModule {
   @Provides
   @Singleton
   @Named("router")
-  def providesActorRef(actorSystem: ActorSystem,
-                       @Named("url") url: String) = {
+  def providesActorRef(actorSystem: ActorSystem) = {
     actorSystem.actorOf(RoundRobinPool(config.reportPoolSize()).props(
-      Props(new ReportActor(config.reportUser(), config.reportPassword(), url, config.reportDatabase())(actorSystem.dispatcher)))
+      Props(
+        if (config.reportBackend() == "graphite")
+          new GraphiteActor(config)
+        else
+          new InfluxActor(config)(actorSystem.dispatcher)
+      ))
     )
   }
 

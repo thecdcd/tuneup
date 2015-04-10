@@ -44,4 +44,10 @@ trait ReportingConfiguration extends ScallopConf {
     required = true,
     noshort = true)
 
+  lazy val reportBackend = opt[String]("report_backend",
+    descr = "The type of reporting service being used. Valid options are influx or graphite and influx will be chosen as default.",
+    default = Some("influx"),
+    required = true,
+    noshort = true)
+
 }
